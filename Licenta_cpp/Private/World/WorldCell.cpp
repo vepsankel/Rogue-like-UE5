@@ -16,7 +16,6 @@ AWorldCell::AWorldCell()
 void AWorldCell::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
