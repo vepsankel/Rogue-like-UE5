@@ -3,9 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WorldCell.h"
+#include "World/WorldCell.h"
+#include "World/WorldMapCells.h"
 #include "GameFramework/Actor.h"
 #include "WorldRoomGenerator.generated.h"
+
+#define NO_ROOM UINT_MAX
+#define MAX_ROOM_TYPES 10
 
 UCLASS()
 class LICENTA_CPP_API AWorldRoomGenerator : public AActor
@@ -19,10 +23,13 @@ public:
 	int GenerateRooms(WorldMapCells * MapCells);
 	
 	UPROPERTY(EditAnywhere)
-		unsigned int RoomSizes[10];
+		unsigned int RoomSizes[MAX_ROOM_TYPES];
 
 	UPROPERTY(EditAnywhere)
-		unsigned int RoomDistances[10];
+		unsigned int RoomAmount[MAX_ROOM_TYPES];
+
+	UPROPERTY(EditAnywhere, meta=(UIMin = 0, UIMax = 100, ClampMin = 0, ClampMax = 100))
+		unsigned int RoomExpansionChancePercent;
 
 protected:
 	// Called when the game starts or when spawned
@@ -32,5 +39,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+private:
+	unsigned int GenerationPointsAvailable[MAX_ROOM_TYPES];
 	WorldMapCells * Cells;
+	TArray<unsigned int> Rooms;
 };

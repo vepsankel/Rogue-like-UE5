@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(WorldGeneration, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(WorldMazeGeneration, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(WorldRoomGeneration, Log, All);
 
 #define DirToY(dir) (((dir) == DIRECTION_UP) ? 1 : (((dir) == DIRECTION_DOWN) ? -1 : 0))
 #define DirToX(dir) (((dir) == DIRECTION_RIGHT) ? 1 : (((dir) == DIRECTION_LEFT) ? -1 : 0))

@@ -37,6 +37,15 @@ int AWorldMapGenerator::GenerateMap() {
 		return -1;
 	}
 
+	if (RoomGenerator != NULL)
+	{
+		RoomGenerator->GenerateRooms(&Cells);
+	} else
+	{
+		UE_LOG(WorldGeneration, Error, TEXT("Rooms could not be generated: no generator!"));
+		return -1;
+	}
+
 	Random::RemoveSeed();
 	return 0;
 }
@@ -63,9 +72,14 @@ int AWorldMapGenerator::BuildMap()
 				Params
 			);
 			// UE_LOG(LogTemp, Warning, TEXT("Obstacle!"));
-		} else
+		} else if (Cells.IsCellOfType(cellCoordX, cellCoordY, CELLTYPE_DEBUG))
 		{
-			// UE_LOG(LogTemp, Warning, TEXT("Not an obstacle!"));
+			Transform.AddToTranslation(FVector(0,0,200));
+			(AWorldCell*)GetWorld()->SpawnActor(
+				WallStaticMeshActor->GetClass(),
+				&Transform,
+				Params
+			);
 		}
 	}
 

@@ -27,10 +27,10 @@ int AWorldMazeGenerator::GenerateMaze(WorldMapCells * MapCells)
 	this->Cells = MapCells;
 	unsigned int size = Cells->GetSize();
 	
-	UE_LOG(WorldGeneration, Log, TEXT("Map size is %u"), size);
+	UE_LOG(WorldMazeGeneration, Log, TEXT("Map size is %u"), size);
 	// check the size is set
 	if (size <= 0) {
-		UE_LOG(WorldGeneration, Warning, TEXT("Map generation ended due to unexpected size"));
+		UE_LOG(WorldMazeGeneration, Warning, TEXT("Map generation ended due to unexpected size"));
 		return -1;
 	}
 
@@ -50,12 +50,12 @@ int AWorldMazeGenerator::GenerateMaze(WorldMapCells * MapCells)
 	unsigned int cellPosX = 0;
 	unsigned int cellPosY = 0;
 	while (IsExpandable()) {
-		UE_LOG(WorldGeneration, Log, TEXT("Map can be expanded"));
+		UE_LOG(WorldMazeGeneration, Log, TEXT("Map can be expanded"));
 		
 		cellIdx = GetExpandableCell(cellPos);
 		Cells->D1ToD2(cellPos, cellPosX, cellPosY);
 
-		UE_LOG(WorldGeneration, Log, TEXT("The expandable wall was selected. Coords = %d (x=%d, y=%d)"), cellPos, cellPosX, cellPosY);
+		UE_LOG(WorldMazeGeneration, Log, TEXT("The expandable wall was selected. Coords = %d (x=%d, y=%d)"), cellPos, cellPosX, cellPosY);
 
 		// Expand:
 		// Select a random direction to expand this wall
@@ -77,7 +77,7 @@ int AWorldMazeGenerator::GenerateMaze(WorldMapCells * MapCells)
 		int randomDirX = DirToX(randomDir);
 		int randomDirY = DirToY(randomDir);
 
-		UE_LOG(WorldGeneration, Log, TEXT("The selected expandion direction = %d"), randomDir);
+		UE_LOG(WorldMazeGeneration, Log, TEXT("The selected expandion direction = %d"), randomDir);
 
 		// Expand walls acording to selected random direction
 		for (int k = 1; k <= 2; k++) {
@@ -88,12 +88,12 @@ int AWorldMazeGenerator::GenerateMaze(WorldMapCells * MapCells)
 		if (IsCellExpandable(cellPosX, cellPosY))
 		{
 			AddExpandableCell(Cells->D2ToD1(cellPosX, cellPosY));
-			UE_LOG(WorldGeneration, Log, TEXT("The selected cell can be expanded further."));
+			UE_LOG(WorldMazeGeneration, Log, TEXT("The selected cell can be expanded further."));
 		}
 		if (IsCellExpandable(cellPosX + 2 * randomDirX, cellPosY + 2 * randomDirY))
 		{
 			AddExpandableCell(Cells->D2ToD1(cellPosX + 2 * randomDirX, cellPosY + 2 * randomDirY));
-			UE_LOG(WorldGeneration, Log, TEXT("The expanded cell can be expanded further."));
+			UE_LOG(WorldMazeGeneration, Log, TEXT("The expanded cell can be expanded further."));
 		}
 	}
 	
@@ -123,7 +123,7 @@ void AWorldMazeGenerator::AddExpandableCell(unsigned int pos) {
 	this->ExpandableCellsPos[ExpandableCellsCount] = pos;
 	ExpandableCellsCount++;
 
-	UE_LOG(WorldGeneration, Log, TEXT("Added expendable cell pos=%d. There are %d expandable cells."), pos, ExpandableCellsCount);
+	UE_LOG(WorldMazeGeneration, Log, TEXT("Added expendable cell pos=%d. There are %d expandable cells."), pos, ExpandableCellsCount);
 }
 
 bool AWorldMazeGenerator::IsCellExpandable(int x, int y) {
