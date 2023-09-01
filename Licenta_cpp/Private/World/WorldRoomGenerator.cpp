@@ -28,6 +28,12 @@ int AWorldRoomGenerator::GenerateRooms(WorldMapCells* MapCells)
 		return WORLD_FAILURE;
 	}
 
+	if (MapCells->GetSize() == 0)
+	{
+		UE_LOG(WorldRoomGeneration, Warning, TEXT("Room generation not required - map of size 0"));
+		return WORLD_SUCCESS;
+	}
+
 	this->Cells = MapCells;
 
 	if (RoomSizes[0] == 0)
@@ -139,19 +145,19 @@ int AWorldRoomGenerator::GenerateRooms(WorldMapCells* MapCells)
 			unsigned int BiggestRoom = RoomSizes[0];
 			unsigned int CellsDisabledByThisRoom = 0;
 
-			unsigned int X_Iter_Min = Room_X - ThisRoomSize - BiggestRoom + 1;
-			if (X_Iter_Min > Cells->GetSize()) X_Iter_Min = 1;
+			unsigned int X_Iter_Min = Room_X - ThisRoomSize - BiggestRoom;
+			if (X_Iter_Min >= Cells->GetSize()) X_Iter_Min = 0;
 			unsigned int X_Iter_Max = Room_X + ThisRoomSize + BiggestRoom;
-			if (X_Iter_Max > Cells->GetSize()) X_Iter_Max = Cells->GetSize();
+			if (X_Iter_Max >= Cells->GetSize()) X_Iter_Max = Cells->GetSize()-1;
 			
-			for (unsigned int X_Iter = X_Iter_Min; X_Iter < X_Iter_Max ; X_Iter++)
+			for (unsigned int X_Iter = X_Iter_Min; X_Iter <= X_Iter_Max ; X_Iter++)
 			{
-				unsigned int Y_Iter_Min = Room_Y - ThisRoomSize - BiggestRoom + 1;
-				if (Y_Iter_Min > Cells->GetSize()) Y_Iter_Min = 1;
+				unsigned int Y_Iter_Min = Room_Y - ThisRoomSize - BiggestRoom;
+				if (Y_Iter_Min >= Cells->GetSize()) Y_Iter_Min = 0;
 				unsigned int Y_Iter_Max = Room_Y + ThisRoomSize + BiggestRoom;
-				if (Y_Iter_Max > Cells->GetSize()) Y_Iter_Max = Cells->GetSize();
+				if (Y_Iter_Max >= Cells->GetSize()) Y_Iter_Max = Cells->GetSize() - 1;
 				
-				for (unsigned int Y_Iter = Y_Iter_Min; Y_Iter < Y_Iter_Max ; Y_Iter++)
+				for (unsigned int Y_Iter = Y_Iter_Min; Y_Iter <= Y_Iter_Max ; Y_Iter++)
 				{
 					if (Rooms[Cells->D2ToD1(X_Iter,Y_Iter)] != NO_ROOM)
 						CellsDisabledByThisRoom++;
@@ -164,6 +170,8 @@ int AWorldRoomGenerator::GenerateRooms(WorldMapCells* MapCells)
 					}
 				}
 			}
+
+			Cells->AddRoom(SpawnPosition, ThisRoomSize * 2 + 2);
 			
 			UE_LOG(WorldRoomGeneration, Log, TEXT("This Room Disables %u cells"), CellsDisabledByThisRoom);
 			
@@ -174,11 +182,11 @@ int AWorldRoomGenerator::GenerateRooms(WorldMapCells* MapCells)
 				GenerationPointsAvailable[GenerationPointsAvailable_Iter] =
 					GenerationPointsAvailable[GenerationPointsAvailable_Iter] <= CellsDisabledByThisRoom ?
 						0 : GenerationPointsAvailable[GenerationPointsAvailable_Iter] - CellsDisabledByThisRoom;
-
-				if (RoomSizes[GenerationPointsAvailable_Iter] != 0)
-					UE_LOG(WorldRoomGeneration, Log, TEXT("After this room there are %u cells available for rooms of size %u"),
-					GenerationPointsAvailable[GenerationPointsAvailable_Iter],
-					RoomSizes[GenerationPointsAvailable_Iter]);
+			
+				// if (RoomSizes[GenerationPointsAvailable_Iter] != 0)
+				// 	UE_LOG(WorldRoomGeneration, Log, TEXT("After this room there are %u cells available for rooms of size %u"),
+				// 	GenerationPointsAvailable[GenerationPointsAvailable_Iter],
+				// 	RoomSizes[GenerationPointsAvailable_Iter]);
 			}
 		}
 	}

@@ -4,30 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Engine/StaticMeshActor.h"
-#include "WorldCell.generated.h"
-
-enum CellType {
-	CELLTYPE_OBSTACLE,
-	CELLTYPE_EMPTY,
-	CELLTYPE_SOIL_NO_PLANT,
-	CELLTYPE_SOIL_PLANT,
-	CELLTYPE_DEBUG
-};
+#include "Plant.generated.h"
 
 UCLASS()
-class LICENTA_CPP_API AWorldCell : public AStaticMeshActor
+class LICENTA_CPP_API APlant : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AWorldCell();
-	void InitCell();
-	CellType GetType();
-	void SetType(CellType type);
-	//void equals(const AWorldCell&);
-	CellType Type;
+	APlant();
+	
+	UPROPERTY(EditAnywhere)
+	TArray<UStaticMesh *> PlantStages;
+
+	UPROPERTY(EditAnywhere)
+	TArray<unsigned int> PlantGrowthDuration;
+
+	bool IsFinalStage(const int Stage) const;
+	FString GetFullStageName(const int Stage) const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -36,4 +31,5 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
 };

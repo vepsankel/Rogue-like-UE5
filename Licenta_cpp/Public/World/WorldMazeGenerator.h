@@ -26,6 +26,9 @@ public:
 	int GetExpandableCell(unsigned int &pos);
 	void AddExpandableCell(unsigned int pos);
 
+	UPROPERTY(EditAnywhere)
+	unsigned int DistanceBetweenCorners = 1;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

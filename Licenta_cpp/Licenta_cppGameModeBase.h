@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Plant/PlantsManager.h"
 #include "Licenta_cppGameModeBase.generated.h"
 
 /**
@@ -13,5 +14,4 @@ UCLASS()
 class LICENTA_CPP_API ALicenta_cppGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
 };

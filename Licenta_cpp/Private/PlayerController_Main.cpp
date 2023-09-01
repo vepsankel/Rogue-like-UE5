@@ -4,7 +4,7 @@
 #include "PlayerController_Main.h"
 
 APlayerController_Main::APlayerController_Main() {
-	bEnableClickEvents = true;
-	bEnableMouseOverEvents = true;
+	//bEnableClickEvents = true;
+	//bEnableMouseOverEvents = true;
 	UE_LOG(LogTemp, Error, TEXT("Click Events enabled\r\n"));
 }
