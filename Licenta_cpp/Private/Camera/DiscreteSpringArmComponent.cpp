@@ -30,17 +30,28 @@ void UDiscreteSpringArmComponent::DecrementZoom(int32 decrement) {
 }
 
 void UDiscreteSpringArmComponent::SetZoom(int32 Zoom) {
-	Zoom = (Zoom > MAX_ZOOM_LEVEL) ? MAX_ZOOM_LEVEL : (Zoom < MIN_ZOOM_LEVEL ? MIN_ZOOM_LEVEL : Zoom);
+	//Zoom = (Zoom > MAX_ZOOM_LEVEL) ? MAX_ZOOM_LEVEL : (Zoom < MIN_ZOOM_LEVEL ? MIN_ZOOM_LEVEL : Zoom);
 	
 	if (Zoom == ZoomLevel)
 		return;
+
+	if (ZoomLevel == 0)
+	{
+		roll = 0;
+	}
 
 	this->ZoomLevel = Zoom;
 	RecalculateSpringArm();
 }
 
-void UDiscreteSpringArmComponent::Rotate(float dYaw) {
+int32 UDiscreteSpringArmComponent::GetZoom()
+{
+	return ZoomLevel;
+}
+
+void UDiscreteSpringArmComponent::Rotate(float dYaw, float DRoll) {
 	this->yaw += dYaw;
+	this->roll += DRoll;
 	RecalculateSpringArm();
 }
 
@@ -49,9 +60,17 @@ float UDiscreteSpringArmComponent::GetYaw() {
 }
 
 void UDiscreteSpringArmComponent::RecalculateSpringArm() {
-	dist = ZoomLevel * 40 + 25;
-	height = ZoomLevel * ZoomLevel * 4;
-	roll = -(ZoomLevel - MIN_ZOOM_LEVEL) * 4;
+	// zoom is reserved for aiming
+	if (ZoomLevel == 0)
+	{
+		dist = 0;
+		height = 0;
+	} else
+	{
+		dist = ZoomLevel * 60 + 55;
+		height = ZoomLevel * ZoomLevel * 4;
+		roll = -(ZoomLevel - MIN_ZOOM_LEVEL) * 2;
+	}
 
 	//TargetArmLength = dist;
 	TargetOffset = FVector3d(-dist, 0, height).RotateAngleAxis(yaw, FVector3d::UpVector);

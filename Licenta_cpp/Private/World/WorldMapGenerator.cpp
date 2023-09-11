@@ -82,7 +82,7 @@ int AWorldMapGenerator::BuildMap()
 	}
 
 	// cells
-	for (int i = 0 ; i < Size * Size ; i++)
+	for (int i = 0 ; i <= Size * Size ; i++)
 	{
 		unsigned int cellCoordX, cellCoordY;
 		Cells.D1ToD2(i, cellCoordX, cellCoordY);
@@ -116,6 +116,7 @@ int AWorldMapGenerator::BuildMap()
 		for (int i = 0 ; i < RoomsPos->Num() ; i++)
 		{
 			FActorSpawnParameters Params;
+			Params.bDeferConstruction = false;
 			
 			unsigned int RoomPos = (*RoomsPos)[i];
 			unsigned int RoomSize = (*RoomsSize)[i];
@@ -175,6 +176,22 @@ int AWorldMapGenerator::GetPlantsManager(APlantsManager** PPlantsManager)
 	return WORLD_SUCCESS;
 }
 
+int AWorldMapGenerator::GetPlayerSpawnRoomPos(FVector& Pos)
+{
+	if (Cells.GetSize() == 0)
+		return WORLD_FAILURE;
+	
+	const TArray<unsigned> * RoomPoss = Cells.GetRoomPos();
+	const unsigned int pos = RoomPoss->GetData()[0];
+
+	unsigned int X, Y;
+	Cells.D1ToD2(pos, X, Y);
+	
+	Pos.X = X*100; Pos.Y = Y*100;
+
+	return WORLD_SUCCESS;
+}
+
 bool AWorldMapGenerator::IsCellOfType(unsigned int x, unsigned int y, CellType type) const {
 	if (!Cells.IsCellInRange(x,y))
 		return false;
@@ -203,4 +220,30 @@ int AWorldMapGenerator::AddNewPlant(const APlant* Plant, FVector Pos)
 		UE_LOG(WorldGeneration, Error, TEXT("Could not add new plant"));
 		return WORLD_FAILURE;
 	}
+}
+
+int AWorldMapGenerator::ReapPlant(FVector Pos, const APlant ** Plant)
+{
+	int LocalX = ((int)Pos.X + 50) / 100;
+	int LocalY = ((int)Pos.Y + 50) / 100;
+	int GLobalX = 100 * LocalX;
+	int GlobalY = 100 * LocalY;
+
+	if ((*Plant = PlantsManager->RemovePlant(FIntVector(GLobalX, GlobalY, 0))) != nullptr)
+	{
+		Cells.SetCellType(LocalX, LocalY, CELLTYPE_SOIL_NO_PLANT);
+		return WORLD_SUCCESS;
+	} else
+	{
+		UE_LOG(WorldGeneration, Error, TEXT("Could not reap plant"));
+		return WORLD_FAILURE;
+	}
+}
+
+bool AWorldMapGenerator::IsPlantFullyGrown(FIntVector Pos)
+{
+	if (PlantsManager == nullptr)
+		return false;
+	
+	return PlantsManager->IsPlantFullyGrown(Pos * 100); 
 }

@@ -32,7 +32,9 @@ public:
 	void TickPlants();
 
 	int AddNewPlant(const APlant* Plant, FVector Pos, unsigned int Stage = 0, unsigned int ElapsedTicks = 0);
-	int RemovePlant(FIntVector3 Pos);
+	const APlant* RemovePlant(FIntVector3 Pos);
+	
+	bool IsPlantFullyGrown(FIntVector3 Pos);
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,9 +45,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	UPROPERTY()
 	TMap<FString, UHierarchicalInstancedStaticMeshComponent *> HISM_Plants;
 	TMap<FIntVector3, FPlantInstance> PlantsInstances;
 
 	int RemovePlantFromHism(FIntVector3);
-	int AddNewPlantToHism(const APlant* Plant, FVector Pos, unsigned int Stage = 0);
+	int AddNewPlantToHism(const APlant* Plant, FVector Pos, int &Index, unsigned int Stage = 0);
 };

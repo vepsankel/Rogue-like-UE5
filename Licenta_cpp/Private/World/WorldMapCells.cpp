@@ -27,13 +27,13 @@ int WorldMapCells::D2ToD1(unsigned int x, unsigned int y) const {
 	return x * this->Size + y;
 }
 
-void WorldMapCells::D1ToD2(unsigned int pos, unsigned int& x, unsigned int& y) const {
+void WorldMapCells::D1ToD2(unsigned int pos, unsigned int& x, unsigned int& y) const {	
 	x = pos / this->Size;
 	y = pos % this->Size;
 }
 
 bool WorldMapCells::IsCellInRange(unsigned int x, unsigned int y) const {
-	return (x < this->Size&& x >= 0 && y < this->Size&& y >= 0);
+	return (x < this->Size && y < this->Size);
 }
 
 bool WorldMapCells::IsCellOfType(unsigned int x, unsigned int y, CellType type) const {

@@ -128,4 +128,9 @@ public:
 private:
 	int HP;
 	// bool CanSeed;
+
+	// required to aim
+	int PreviousZoom;
+	bool IsAiming;
+	float LastTimeAimed;
 };

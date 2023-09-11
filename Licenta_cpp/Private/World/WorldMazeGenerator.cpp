@@ -12,7 +12,6 @@ AWorldMazeGenerator::AWorldMazeGenerator()
 void AWorldMazeGenerator::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -42,8 +41,74 @@ int AWorldMazeGenerator::GenerateMaze(WorldMapCells * MapCells)
 	// first cells coords
 	int firstWallX = size / 2;
 	int firstWallY = size / 2;
+
+	UE_LOG(Player, Error, TEXT("FirstWallX %d, FirstWallY %d"), firstWallX, firstWallY);
+	
 	AddExpandableCell(Cells->D2ToD1(firstWallX, firstWallY));
 	Cells->SetCellType(firstWallX, firstWallY, CELLTYPE_OBSTACLE);
+
+	//tmp
+	for (unsigned int BorderX = 0; BorderX < size; BorderX++)
+	{
+		Cells->SetCellType(BorderX, 0, CELLTYPE_OBSTACLE);
+
+		if (abs((int)(firstWallX - BorderX)) % DistanceBetweenCorners == 0 && (abs((int)(firstWallY)) % DistanceBetweenCorners == 0))
+		{
+			
+			unsigned int i;
+			Random(i);
+			if (i % 3 == 0)
+			{
+				AddExpandableCell(Cells->D2ToD1(BorderX, 0));
+			} 
+		}
+	}
+
+	for (unsigned int BorderX = 0; BorderX < size; BorderX++)
+	{
+		Cells->SetCellType(BorderX, size-1, CELLTYPE_OBSTACLE);
+	
+		if (abs((int)(firstWallX - BorderX)) % DistanceBetweenCorners == 0 && (abs((int)((size-1) - firstWallY)) % DistanceBetweenCorners == 0))
+		{
+			unsigned int i;
+			Random(i);
+			if (i % 3 == 0)
+			{
+				AddExpandableCell(Cells->D2ToD1(BorderX, size - 1));
+			} 
+		}
+	}
+
+	for (unsigned int BorderY = 0; BorderY < size; BorderY++)
+	{
+		Cells->SetCellType(0, BorderY, CELLTYPE_OBSTACLE);
+	
+		if (abs((int)(firstWallX)) % DistanceBetweenCorners == 0 && (abs((int)(BorderY - firstWallY)) % DistanceBetweenCorners == 0))
+		{
+			unsigned int i;
+			Random(i);
+			if (i % 3 == 0)
+			{
+				AddExpandableCell(Cells->D2ToD1(0, BorderY));
+			} 
+		}
+	}
+
+	for (unsigned int BorderY = 0; BorderY < size; BorderY++)
+	{
+		Cells->SetCellType(size - 1, BorderY, CELLTYPE_OBSTACLE);
+	
+		if (abs((int)((size - 1) - firstWallX)) % DistanceBetweenCorners == 0 && (abs((int)(BorderY - firstWallY)) % DistanceBetweenCorners == 0))
+		{
+			unsigned int i;
+			Random(i);
+			if (i % 3 == 0)
+			{
+				AddExpandableCell(Cells->D2ToD1(size - 1, BorderY));
+			} 
+		}
+	}
+	//tmp
 
 	unsigned int cellIdx = 0;
 	unsigned int cellPos = 0;

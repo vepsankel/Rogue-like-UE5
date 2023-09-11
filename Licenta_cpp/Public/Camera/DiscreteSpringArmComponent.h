@@ -19,9 +19,10 @@ public:
 
 	UDiscreteSpringArmComponent();
 	void SetZoom(int32);
+	int32 GetZoom();
 	void IncrementZoom(int32 increment = 1);
 	void DecrementZoom(int32 decrement = 1);
-	void Rotate(float dYaw);
+	void Rotate(float dYaw, float dRoll = 0);
 	float GetYaw();
 	int32 DefaultZoomLevel = 5;
 

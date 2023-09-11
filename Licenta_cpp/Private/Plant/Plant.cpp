@@ -27,7 +27,7 @@ bool APlant::IsFinalStage(const int Stage) const
 
 FString APlant::GetFullStageName(const int Stage) const
 {
-	return GetName() + PlantStages[Stage]->GetName();
+	return PlantName + PlantStages[Stage]->GetName();
 }
 
 // Called every frame

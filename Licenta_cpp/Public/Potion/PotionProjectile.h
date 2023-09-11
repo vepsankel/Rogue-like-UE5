@@ -4,28 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Plant.generated.h"
+#include "PotionProjectile.generated.h"
 
 UCLASS()
-class LICENTA_CPP_API APlant : public AActor
+class LICENTA_CPP_API APotionProjectile : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	APlant();
-
-	UPROPERTY(EditAnywhere)
-	FString PlantName;
-	
-	UPROPERTY(EditAnywhere)
-	TArray<UStaticMesh *> PlantStages;
-
-	UPROPERTY(EditAnywhere)
-	TArray<unsigned int> PlantGrowthDuration;
-
-	bool IsFinalStage(const int Stage) const;
-	FString GetFullStageName(const int Stage) const;
+	APotionProjectile();
 
 protected:
 	// Called when the game starts or when spawned

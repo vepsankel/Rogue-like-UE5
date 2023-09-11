@@ -42,19 +42,18 @@ bool UActorComponent_Inventar::ConsumeUpdate()
 
 int UActorComponent_Inventar::AddInventarObject(UInventarObject * Obj, bool AddToAccessBar)
 {
-	Content.Add(Obj->GetName(), Obj);
-	UE_LOG(Player, Log, TEXT("Added Inventar Object %s"), *FString(Obj->GetName()));
+	Content.Add(Obj->GetObjectName(), Obj);
+	UE_LOG(Player, Log, TEXT("Added Inventar Object %s"), *FString(Obj->GetObjectName()));
 
 	unsigned int i = 0;
 	if (AddToAccessBar)
 	{
 		for (auto & Name : AccessBarContent)
 		{
-			i++;
-			if (Name == "")
+			if (Name.Equals(""))
 			{
-				Name = Obj->GetName();
-				UE_LOG(Player, Log, TEXT("For object %s there is a slot nr.%d"), *FString(Obj->GetName()), i);
+				Name = Obj->GetObjectName();
+				UE_LOG(Player, Log, TEXT("For object %s there is a slot nr.%d"), *FString(Obj->GetObjectName()), i++);
 				NeedsUpdate = true;
 				break;
 			}
@@ -65,9 +64,15 @@ int UActorComponent_Inventar::AddInventarObject(UInventarObject * Obj, bool AddT
 	return WORLD_SUCCESS;
 }
 
-int UActorComponent_Inventar::ModifyObjectQuantity(const FString &ObjName, int Quantity)
+int UActorComponent_Inventar::ModifyObjectQuantity(const FString &ObjName, int Quantity, bool Relative)
 {
-	UInventarObject * Obj = *Content.Find(ObjName);
+	UInventarObject ** PObj = Content.Find(ObjName);
+	UInventarObject * Obj = nullptr;
+
+	if (PObj != nullptr)
+	{
+		Obj = *PObj;
+	}
 	
 	if (Obj == nullptr)
 	{
@@ -80,9 +85,62 @@ int UActorComponent_Inventar::ModifyObjectQuantity(const FString &ObjName, int Q
 		UE_LOG(Player, Warning, TEXT("Cannot modify quantity of object %s: object is uncountable"), *FString(ObjName));
 		return WORLD_FAILURE;
 	}
+
+	const int OldQuantity = Obj->GetQuantity();
+
+	if (Relative)
+	{
+		Obj->SetQuantity(Quantity + OldQuantity);
+	} else
+	{
+		Obj->SetQuantity(Quantity);
+	}
+
+	if (Obj->GetQuantity() <= 0)
+	{
+		for (auto & ObjectName : AccessBarContent)
+		{
+			if (ObjectName.Equals(ObjName))
+			{
+				ObjectName = "";
+			}
+		}
+	} else if (OldQuantity == 0 )
+	{
+		for (auto & ObjectName : AccessBarContent)
+		{
+			if (ObjectName.Equals(""))
+			{
+				ObjectName = ObjName;
+				break;
+			}
+		}
+	}
+
 	
-	Obj->SetQuantity(Quantity);
+	
 	NeedsUpdate = true;
+	return WORLD_SUCCESS;
+}
+
+int UActorComponent_Inventar::ModifyObjectDescription(const FString& ObjName, FString ObjDescription)
+{
+	UInventarObject ** PObj = Content.Find(ObjName);
+	UInventarObject * Obj = nullptr;
+
+	if (PObj != nullptr)
+	{
+		Obj = *PObj;
+	}
+	
+	if (Obj == nullptr)
+	{
+		UE_LOG(Player, Error, TEXT("Cannot modify quantity of object %s: object does not exist"), *FString(ObjName));
+		return WORLD_FAILURE;
+	}
+
+	NeedsUpdate = true;
+	Obj->SetItemDescription(ObjDescription);
 	return WORLD_SUCCESS;
 }
 
@@ -127,6 +185,25 @@ UInventarObject* UActorComponent_Inventar::GetSelectedObject()
 	UInventarObject ** PSelectedObject = Content.Find(SelectedObjName);
 	
 	return (PSelectedObject == nullptr) ? nullptr : *PSelectedObject;
+}
+
+UInventarObject* UActorComponent_Inventar::GetObjectByIdx(const int ObjIdx)
+{
+	const FString ObjName = AccessBarContent[ObjIdx];
+
+	if (ObjName.Equals(""))
+	{
+		return nullptr;
+	}
+
+	UInventarObject ** PObj = Content.Find(ObjName);
+
+	if (PObj == nullptr)
+	{
+		return nullptr;
+	}
+	
+	return *PObj;
 }
 
 // Called every frame

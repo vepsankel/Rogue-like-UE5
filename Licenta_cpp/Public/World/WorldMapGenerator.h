@@ -69,8 +69,11 @@ public:
 
 	int GetWorldMapCells(WorldMapCells ** Cells);
 	int GetPlantsManager(APlantsManager** PlantsManager);
+	int GetPlayerSpawnRoomPos(FVector & Pos);
 
 	int AddNewPlant(const APlant* , FVector);
+	int ReapPlant(FVector Pos, const APlant ** Plant);
+	bool IsPlantFullyGrown(FIntVector Pos);
 
 	bool IsCellOfType(unsigned int, unsigned int, CellType) const; 
 	

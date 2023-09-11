@@ -77,6 +77,19 @@ void APawn_Main::BeginPlay()
 void APawn_Main::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Check last time "aim" (Action2) was triggered
+	// If it is more than threshold, reset the position
+	float Time = UGameplayStatics::GetTimeSeconds(GetWorld());
+	if (IsAiming)
+	{
+		if (LastTimeAimed + 0.2 < Time)
+		{
+			IsAiming = false;
+			springArmComponent->SetZoom(PreviousZoom);
+			ControllableMovableActor->Action2(false, GetActorRotation());
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -219,18 +232,29 @@ void APawn_Main::Roam(const FInputActionInstance& Instance) {
 }
 
 void APawn_Main::Rotate(const FInputActionInstance& Instance) {
-	float  mouseRotationInput = Instance.GetValue().Get<float>();
+	FVector2d  mouseRotationInput = Instance.GetValue().Get<FVector2d>();
 
 	if (!(this->springArmComponent)) {
 		UE_LOG(LogTemp, Warning, TEXT("APawn_Main::Rotate() : SpringArmComponent is null"));
 		return;
 	}
 
-	springArmComponent->Rotate(mouseRotationInput);
+	if (IsAiming)
+	{
+		springArmComponent->Rotate(mouseRotationInput.X, mouseRotationInput.Y * 5);
+	} else
+	{
+		springArmComponent->Rotate(mouseRotationInput.X);
+	}
 	SetActorRotation(FRotator(0, springArmComponent->GetYaw(), 0));
 }
 
 void APawn_Main::Zoom(const FInputActionInstance& Instance) {
+	if (IsAiming)
+	{
+		return;
+	}
+	
 	int32 mouseZoom = -(int32)Instance.GetValue().Get<float>();
 
 	if (springArmComponent) {
@@ -279,9 +303,25 @@ void APawn_Main::Action1(const FInputActionInstance& Instance)
 	ControllableMovableActor->Action1();
 }
 
-void APawn_Main::Action2(const FInputActionInstance& Instance)
-{
-	ControllableMovableActor->Action2();
+void APawn_Main::Action2(const FInputActionInstance& Instance) {
+	
+	const bool Success = ControllableMovableActor->Action2(true, springArmComponent->GetComponentRotation());
+
+	if (!Success)
+	{
+		LastTimeAimed -= 10;
+		return;
+	}
+
+	LastTimeAimed = UGameplayStatics::GetTimeSeconds(GetWorld());;
+	
+	if (!IsAiming)
+	{
+		IsAiming = true;
+		PreviousZoom = springArmComponent->GetZoom();
+	}
+	
+	springArmComponent->SetZoom(0);
 }
 
 void APawn_Main::Use(const FInputActionInstance& Instance)

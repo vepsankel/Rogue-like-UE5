@@ -5,6 +5,8 @@
 #include "World/WorldMapCells.h"
 #include "World/WorldMapGenerator.h"
 #include "World/WorldGlobals.h"
+#include "Potion/PotionRecipe.h"
+#include "Potion/PotionProjectile.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -23,6 +25,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetCanSeed();
 
+	UFUNCTION(BlueprintCallable)
+	bool GetCanReap();
+
 	void DBG_WinEveryoneInRoom();
 
 protected:
@@ -32,7 +37,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	int MoveTo(FVector3f Dir, float DeltaTime, bool WithRotation = true);
 
 	UPROPERTY(EditAnywhere)
 	AWorldMapGenerator * WorldMap;
@@ -40,19 +44,32 @@ public:
 	// UPROPERTY(EditAnywhere)
 	// APlant * SelectablePlant;
 	
-	const UActorComponent_Inventar* GetInventarComponent();
-	void Plant(APlant * SelectedPlant);
+	UActorComponent_Inventar* GetInventarComponent();
 	void SelectInventarObject(int);
 
 	// Input
 	void Action1();
-	void Action2();
+	bool Action2(bool, const FRotator &);
 	void Use();
 
 	// Actions
 	void AttackMelee();
+	void Throw();
 	void StartCrafting();
+	void EndCrafting();
+	void Plant();
+	void Reap();
 
+	// Auxilary
+	void DrawAimingSpline();
+	int MoveTo(FVector3f Dir, float DeltaTime, bool WithRotation = true);
+	UPROPERTY(EditAnywhere);
+	TSubclassOf<UStaticMesh> AimingSphere;
+private:
+	UPROPERTY()
+	TArray<UStaticMesh*> AimingSpheres;
+public:
+	
 	// Animation
 	UFUNCTION(BlueprintCallable)
 	bool GetIsMoving();
@@ -66,6 +83,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetIsCrafting();
 
+	UFUNCTION(BlueprintCallable)
+	bool GetIsThrowing();
+
 	// Animation speed
 	UFUNCTION(BlueprintCallable)
 	float GetSpeed();
@@ -74,8 +94,22 @@ public:
 	void SetSpeed(float NewSpeed);
 
 private:
+	bool IsSpawned;
 	FVector3d FacingDir;
 	FVector3d DesiredFacingDir;
+
+	// Inventar
+	UPROPERTY()
+	UInventarObject * SelectedInventarObject;
+	UPROPERTY()
+	UActorComponent_Inventar * InventarComponent;
+	
+	// Crafting
+	UPROPERTY()
+	UPotionRecipe * PotionRecipe;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<APotionProjectile> Projectile;
 	
 	// Animation properties
 
@@ -95,8 +129,24 @@ private:
 	const float MeleeAttackDuration = 0.8;
 	bool IsAttacking;
 
+	// Ranged Attack
+	bool IsAiming;
+	bool IsThrowing;
+	float LastTimeThrew;
+	const float ThrowingDuration = 0.5;
+	const float ThrowingDelay = 0.25;
+	bool ThrowingDelayReached;
+	FRotator AimingDir;
+
 	// Crafting
+	FString BulbPreviousDescription;
 	bool IsCrafting;
+	
 	// UPROPERTY(EditAnywhere)
 	bool CanSeed;
+	void UpdateCanSeed();
+
+	// Reaping
+	bool CanReap;
+	void UpdateCanReap();
 };

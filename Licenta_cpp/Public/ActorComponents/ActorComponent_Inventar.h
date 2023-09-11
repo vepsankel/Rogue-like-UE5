@@ -34,7 +34,10 @@ public:
 	int AddInventarObject(UInventarObject * Obj, bool AddToAccessBar = true);
 
 	UFUNCTION(BlueprintCallable)
-	int ModifyObjectQuantity(const FString& ObjName, int NewQuantity);
+	int ModifyObjectQuantity(const FString& ObjName, int NewQuantity, bool Relative = false);
+
+	UFUNCTION(BlueprintCallable)
+	int ModifyObjectDescription(const FString& ObjName, FString ObjDescription);
 
 	UFUNCTION(BlueprintCallable)
 	const TMap<FString, UInventarObject *> & GetContent();
@@ -47,6 +50,7 @@ public:
 	
 	virtual int SelectAccessBarObject(const int ObjIdx);
 	UInventarObject * GetSelectedObject();
+	UInventarObject * GetObjectByIdx(const int ObjIdx);
 	
 	TMap<FString, UInventarObject * > Content;
 	TArray<FString> AccessBarContent;

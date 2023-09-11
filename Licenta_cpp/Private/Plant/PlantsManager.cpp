@@ -56,13 +56,15 @@ void APlantsManager::TickPlants()
 				UE_LOG(PlantsLog, Log, TEXT("Removing plant (%d,%d,%d) from HISM failed when it grew into next stage"), Pos.X, Pos.Y, Pos.Z);
 				continue;
 			}
-			
-			if (AddNewPlantToHism(Val.Plant, FVector(Pos), NextStage) == WORLD_FAILURE)
+
+			int Instance;
+			if (AddNewPlantToHism(Val.Plant, FVector(Pos), Instance, NextStage) == WORLD_FAILURE)
 			{
 				UE_LOG(PlantsLog, Log, TEXT("Adding plant (%d,%d,%d) to HISM failed when it grew into next stage"), Pos.X, Pos.Y, Pos.Z);
 				continue;
 			}
 
+			Val.HISM_Id = Instance;
 			Val.Stage = NextStage;
 			Val.ElapsedTicks = 0;
 			Val.IsFinalStage = Val.Plant->IsFinalStage(NextStage);
@@ -92,6 +94,7 @@ void APlantsManager::BeginPlay()
 			AddInstanceComponent(HISM_Plant);
 			HISM_Plant->RegisterComponent();
 
+			HISM_Plant->bMultiBodyOverlap = true;
 			HISM_Plant->SetStaticMesh(PlantStage);
 			HISM_Plant->SetCullDistances(0, 5000);
 			HISM_Plants.Add(PlantNameStageName, HISM_Plant);
@@ -134,26 +137,57 @@ int APlantsManager::RemovePlantFromHism(FIntVector3 Pos)
 	}
 
 	// Get the plant id
-	FHitResult Result;
-	GetWorld()->LineTraceSingleByChannel(
-		Result,
-		FVector(Pos + FIntVector3(0,0,100)),
-		FVector(Pos + FIntVector3(0,0,-100)),
-		ECC_Visibility
-		);
+	// FHitResult Result;
+	// GetWorld()->LineTraceSingleByChannel(
+	// 	Result,
+	// 	FVector(Pos + FIntVector3(0,0,100)),
+	// 	FVector(Pos + FIntVector3(0,0,-100)),
+	// 	ECC_GameTraceChannel1
+	// 	);
+	//
+	// int32 Item = Result.ElementIndex;
 
-	int32 Item = Result.Item;
-	
-	if (HISM_Removed->RemoveInstance(Item) != true)
+	FIntVector3 DeletedHismPos = FIntVector3(0);
+	int DeletedHismIdx = -1;
+
+	FIntVector3 BiggestIdxPos = FIntVector3(0);
+	int BiggestHismIdx = -1;
+
+	for (auto & PosToInstance : PlantsInstances)
 	{
-		UE_LOG(PlantsLog, Error, TEXT("HISM corresponding to plant stage %s has no element of index %d"), *FString(PlantNameStageName), Item);
+		FIntVector3 IterPos = PosToInstance.Key;
+		FPlantInstance & Instance = PosToInstance.Value;
+
+		if (Instance.Plant->GetFullStageName(Instance.Stage).Equals(PlantNameStageName))
+		{
+			if (Instance.HISM_Id > BiggestHismIdx)
+			{
+				BiggestHismIdx = Instance.HISM_Id;
+				BiggestIdxPos = IterPos;
+			}
+		}
+	}
+
+	DeletedHismPos = Pos;
+	DeletedHismIdx = PlantsInstances[Pos].HISM_Id;
+	FTransform BiggestHismTransform;
+	
+	HISM_Removed->GetInstanceTransform(BiggestHismIdx,BiggestHismTransform);
+	HISM_Removed->UpdateInstanceTransform(DeletedHismIdx, BiggestHismTransform, false);
+
+	if (HISM_Removed->RemoveInstance(DeletedHismIdx) != true)
+	{
+		UE_LOG(PlantsLog, Error, TEXT("HISM corresponding to plant stage %s has no element of index %d"), *FString(PlantNameStageName), BiggestHismIdx);
 		return WORLD_FAILURE;
 	}
+
+	PlantsInstances[BiggestIdxPos].HISM_Id = DeletedHismIdx;
+	PlantsInstances[DeletedHismPos].HISM_Id = -1;
 
 	return WORLD_SUCCESS;
 }
 
-int APlantsManager::AddNewPlantToHism(const APlant* Plant, FVector Pos, unsigned Stage)
+int APlantsManager::AddNewPlantToHism(const APlant* Plant, FVector Pos, int & Index, unsigned Stage)
 {
 	FString FullName = Plant->GetFullStageName(Stage);
 	FTransform Transform;
@@ -170,33 +204,53 @@ int APlantsManager::AddNewPlantToHism(const APlant* Plant, FVector Pos, unsigned
 		return WORLD_FAILURE;
 	}
 
-	HISM_Plant->AddInstance(Transform);
+	Index = HISM_Plant->AddInstance(Transform);
 
 	return WORLD_SUCCESS;
 }
 
-int APlantsManager::RemovePlant(FIntVector3 Pos)
+const APlant * APlantsManager::RemovePlant(FIntVector3 Pos)
 {
 	if (RemovePlantFromHism(Pos) != WORLD_SUCCESS)
 	{
 		UE_LOG(PlantsLog, Error, TEXT("Could not remove plant (%d,%d,%d) from HISM"), Pos.X, Pos.Y, Pos.Z);
-		return WORLD_FAILURE;
+		return nullptr;
+	}
+
+	FPlantInstance * PlantInstance = PlantsInstances.Find(Pos);
+
+	if (PlantInstance == nullptr)
+	{
+		return nullptr;
 	}
 	
+	const APlant * Plant = PlantInstance->Plant;
 	PlantsInstances.Remove(Pos);
-	return WORLD_SUCCESS;
+	
+	return Plant;
+}
+
+bool APlantsManager::IsPlantFullyGrown(FIntVector3 Pos)
+{
+	FPlantInstance * PlantInstance = PlantsInstances.Find(Pos);
+
+	if (PlantInstance == nullptr)
+		return false;
+
+	return PlantInstance->IsFinalStage;
 }
 
 int APlantsManager::AddNewPlant(const APlant* Plant, FVector Pos, unsigned int Stage, unsigned int ElapsedTicks)
 {
-	if (AddNewPlantToHism(Plant, Pos, Stage) != WORLD_SUCCESS)
+	int Index = 0;
+	if (AddNewPlantToHism(Plant, Pos, Index, Stage) != WORLD_SUCCESS)
 	{
 		UE_LOG(PlantsLog, Error, TEXT("Could not add plant (%d,%d,%d), Stage %d to HISM"), Pos.X, Pos.Y, Pos.Z, Stage);
 		RemovePlantFromHism(FIntVector3(Pos.X, Pos.Y, Pos.Z));
 		return WORLD_FAILURE;
 	}
 	
-	FPlantInstance NewPlant = {0, Plant, Stage, ElapsedTicks};
+	FPlantInstance NewPlant = {Index, Plant, Stage, ElapsedTicks};
 	
 	while (ElapsedTicks >= Plant->PlantGrowthDuration[Stage] && !Plant->IsFinalStage(Stage))
 	{
@@ -204,7 +258,7 @@ int APlantsManager::AddNewPlant(const APlant* Plant, FVector Pos, unsigned int S
 		Stage++;
 	}
 	
-	PlantsInstances.Add(TTuple<FVector, FPlantInstance>(Pos, NewPlant));
+	PlantsInstances.Add(TTuple<FVector, FPlantInstance>(FIntVector3(Pos.X, Pos.Y, Pos.Z), NewPlant));
 	
 	return WORLD_SUCCESS;
 }
